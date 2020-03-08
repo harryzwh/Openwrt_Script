@@ -1,0 +1,55 @@
+# Language and keyboard
+d-i debian-installer/locale string en_US.UTF-8
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/xkb-keymap select us
+
+# Network
+d-i netcfg/choose_interface select auto
+
+# Mirror
+d-i mirror/country string manual
+d-i mirror/http/hostname string mirrors.aliyun.com
+d-i mirror/http/directory string /ubuntu
+d-i mirror/http/proxy string
+
+# Account
+d-i passwd/root-login boolean false
+d-i passwd/user-fullname string oai
+d-i passwd/username string oai
+d-i passwd/user-password password oai
+d-i passwd/user-password-again password oai
+d-i user-setup/allow-password-weak boolean true
+d-i user-setup/encrypt-home boolean false
+
+# Timezone
+d-i clock-setup/utc boolean true
+d-i time/zone string Australia/Sydney
+d-i clock-setup/ntp boolean true
+
+# Partition
+d-i partman/early_command string debconf-set partman-auto/disk "$(list-devices disk | head -n1)"
+d-i partman-auto/method string regular
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+d-i partman-auto/choose_recipe select atomic                                                    
+ 
+# Package
+tasksel tasksel/first multiselect standard openssh-server
+d-i pkgsel/include string htop iftop curl screen git gnupg-agent
+d-i pkgsel/update-policy select none
+d-i pkgsel/upgrade select none
+
+d-i preseed/late_command string \
+in-target wget -O /tmp/post_script.sh http://freenas.boot.pxe:8080/Preseed/post_script.sh ; \
+in-target chmod +x /tmp/post_script.sh ; \
+in-target /bin/bash /tmp/post_script.sh
+
+# Grub
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/bootdev string default
+
+# Reboot
+d-i finish-install/reboot_in_progress note
+d-i debian-installer/exit/reboot boolean true

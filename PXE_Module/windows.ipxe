@@ -1,0 +1,64 @@
+#!ipxe
+
+set WIN_PATH tftp://${Hostname}/Win_Module
+
+menu PXE Boot Server
+
+item --gap Windows
+item win10ltsc_en --Windows 10 LTSC EN
+item win10ltsc_cn --Windows 10 LTSC CN
+item win10_en --Windows 10 EN
+item win10_cn --Windows 10 CN
+item win7x64 --Windows 7 x64
+item winpe --Windows PE
+
+item --gap Exit iPXE
+item HardDisk --Boot from hard disk
+item My_Exit --Exit
+
+choose --default win10ltsc_en --timeout 30000 custom_choice || goto My_Exit
+echo ${cls}
+goto ${custom_choice}
+goto My_Exit
+
+:win10ltsc_en
+set Source_Path ${SRC_Path}/Win10_LTSC_EN
+set Auto_XML Win10_LTSC_EN.xml
+goto win_boot
+
+:win10ltsc_cn
+set Source_Path ${SRC_Path}/Win10_LTSC_CN
+set Auto_XML Win10_LTSC_CN.xml
+goto win_boot
+
+:win10_en
+set Source_Path ${SRC_Path}/Win10_EN
+set Auto_XML Win10_EN.xml
+goto win_boot
+
+:win10_cn
+set Source_Path ${SRC_Path}/Win10_CN
+set Auto_XML Win10_CN.xml
+goto win_boot
+
+:win7x64
+set Source_Path ${SRC_Path}/Win7_EN
+set Auto_XML Win7_EN.xml
+goto win_boot
+
+:winpe
+sanboot ${SRC_Path}/WinPE.iso
+
+:win_boot
+kernel ${WIN_PATH}/wimboot
+initrd ${WIN_PATH}/PE_Init.bat PE_Init.bat
+initrd ${WIN_PATH}/winpeshl.ini winpeshl.ini
+initrd --name autounattend.xml ${WIN_PATH}/${Auto_XML} ${Auto_XML} ||
+initrd ${Source_Path}/install.bat install.bat
+initrd ${Source_Path}/boot/bcd BCD
+initrd ${Source_Path}/boot/boot.sdi boot.sdi
+initrd ${Source_Path}/sources/boot.wim boot.wim
+boot
+
+:My_Exit
+exit

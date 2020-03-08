@@ -1,0 +1,75 @@
+#!ipxe
+
+set UBUNTU_BOOT_PREFIX ${MIRROR_URL}/ubuntu/dists
+set UBUNTU_BOOT_SUFFIX main/installer-amd64/current/images/hwe-netboot/ubuntu-installer/amd64
+set PRESEED_PATH tftp://${Hostname}/Preseed
+
+menu PXE Boot Server
+
+item --gap Ubuntu
+item ubuntu1804desktop --Ubuntu 18.04 Desktop
+item ubuntu1804server --Ubuntu 18.04 Server
+item ubuntu1604desktop --Ubuntu 16.04 Desktop
+item ubuntu1604server --Ubuntu 16.04 Server
+item ubuntu1404desktop --Ubuntu 14.04 Desktop
+item ubuntu1404server --Ubuntu 14.04 Server
+
+item --gap Exit iPXE
+item HardDisk --Boot from hard disk
+item My_Exit --Exit
+
+choose --default ubuntu1804desktop --timeout 30000 custom_choice || goto My_Exit
+echo ${cls}
+goto ${custom_choice}
+goto My_Exit
+
+:ubuntu1804desktop
+set UBUNTU_VERSION bionic
+set Preseed ${PRESEED_PATH}/desktop.seed
+goto ubuntu_boot
+
+:ubuntu1804server
+set UBUNTU_VERSION bionic
+set Preseed ${PRESEED_PATH}/server.seed
+goto ubuntu_boot
+
+:ubuntu1604desktop
+set UBUNTU_VERSION xenial
+set Preseed ${PRESEED_PATH}/desktop.seed
+goto ubuntu_boot
+
+:ubuntu1604server
+set UBUNTU_VERSION xenial
+set Preseed ${PRESEED_PATH}/server.seed
+goto ubuntu_boot
+
+:ubuntu1404desktop
+set UBUNTU_VERSION trusty
+set Preseed ${PRESEED_PATH}/desktop.seed
+goto ubuntu_boot
+
+:ubuntu1404server
+set UBUNTU_VERSION trusty
+set Preseed ${PRESEED_PATH}/server.seed
+goto ubuntu_boot
+
+:ubuntu_boot
+#echo -n Input hostname: && read hostname
+set Boot_Path ${UBUNTU_BOOT_PREFIX}/${UBUNTU_VERSION}-updates/${UBUNTU_BOOT_SUFFIX}
+set Args locale=en_US.UTF-8 keyboard-configuration/layoutcode=us mirror/country=AU ipv6.disable=1 url=${Preseed}
+goto find_kernel
+
+:find_kernel
+kernel ${Boot_Path}/vmlinuz && set Kernel_Name vmlinuz && goto find_Initrd ||
+kernel ${Boot_Path}/linux && set Kernel_Name linux && goto find_Initrd ||
+:find_Initrd
+initrd ${Boot_Path}/initrd.lz && set Initrd_Name initrd.lz && goto linux_boot ||
+initrd ${Boot_Path}/initrd.gz && set Initrd_Name initrd.gz && goto linux_boot ||
+initrd ${Boot_Path}/initrd.img && set Initrd_Name initrd.img && goto linux_boot ||
+initrd ${Boot_Path}/initrd && set Initrd_Name initrd && goto linux_boot ||
+:linux_boot
+imgargs ${Kernel_Name} initrd=${Initrd_Name} ${Args}
+boot
+
+:My_Exit
+exit

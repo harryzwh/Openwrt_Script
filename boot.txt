@@ -1,0 +1,29 @@
+#!ipxe
+
+nslookup Hostname freenas
+set MIRROR_URL http://mirrors.aliyun.com
+set MODULE_PATH tftp://${Hostname}/PXE_Module
+
+menu PXE Boot Server
+
+item --gap Select OS
+item ubuntu --Ubuntu
+item windows --Windows
+
+item --gap Exit iPXE
+item HardDisk --Boot from hard disk
+item My_Exit --Exit
+
+choose --default ubuntu --timeout 30000 custom_choice || goto My_Exit
+echo ${cls}
+goto ${custom_choice}
+goto My_Exit
+
+:ubuntu
+chain ${MODULE_PATH}/ubuntu.ipxe
+
+:windows
+chain ${MODULE_PATH}/windows.ipxe
+
+:My_Exit
+exit
